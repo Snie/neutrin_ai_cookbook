@@ -4,7 +4,7 @@ description: Best practices for GitHub Actions in this docs-only repository. Loa
 metadata:
   update-policy: quarterly
   update-source: https://docs.github.com/en/actions
-  last-updated: "2026-03-29"
+  last-updated: "2026-03-30"
 ---
 
 # GitHub Actions: Documentation Repository Workflows
@@ -74,6 +74,9 @@ jobs:
           <key>: <value>
 ```
 
+For further details refer to
+<https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions>
+
 ## Secrets and Sensitive Data
 
 - Store sensitive values as repository, environment, or organisation secrets.
@@ -99,7 +102,7 @@ concurrency:
 
 | Action | Purpose | Current pinned version |
 | ------ | ------- | ---------------------- |
-| `actions/checkout` | Check out the repository | v4.2.2 |
+| `actions/checkout` | Check out the repository | v6.0.2 |
 | `DavidAnson/markdownlint-cli2-action` | Lint markdown files | v23.0.0 |
 
 Always verify the commit hash before use. Fetch the latest tag from the action's repository
