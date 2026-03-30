@@ -20,12 +20,36 @@ Refresh skill content by fetching the authoritative source when the update thres
 /update-skills <skill-name>      # Target one skill by name
 ```
 
+## Requirements
+
+### Skill metadata
+
+Every `SKILL.md` in this project must open with YAML frontmatter between `---` markers.
+In order to correctly work, this update-skills should have the following fields and valid values:
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `metadata` | Yes | Project-specific block. Not part of the Claude Code standard. |
+| `metadata.update-policy` | Yes | `monthly` \| `quarterly` \| `manual` \| `never` |
+| `metadata.update-source` | Yes | URL to fetch directly, or `web-search` for official docs search. |
+| `metadata.last-updated` | Yes | Date content was last refreshed: `YYYY-MM-DD`. |
+
+When not present, inform the user and ask him if and how he wants to set the required metadata.
+
+### SKILL.md ideal setup
+
+When a skill section is technical and contains commands and instructions, it should also contain at
+ least a link to the official documentation or a valid web source for further readings and references.
+ This part is up to the user, but this skill should inform him about this, and ask the user if he wants to
+ enhance the mentioned sections with further readings and technical documentation URLs.
+
 ## Algorithm
 
 **Step 1 — Discover skills**: Glob all `.claude/skills/*/SKILL.md`.
 
 **Step 2 — Parse frontmatter**: Read `metadata.update-policy`, `metadata.update-source`, and
-`metadata.last-updated` from each.
+`metadata.last-updated` from each. In case this metadata is not present, warn the user and ask
+him if and how to fill these fields
 
 **Step 3 — Check threshold**: Compute `today - last-updated` in days.
 
@@ -56,6 +80,7 @@ Preserve all frontmatter fields. Do not remove sections that have no upstream eq
 ## Rules
 
 - Never change `metadata.update-policy`, `metadata.update-source`, or `name` when updating a skill.
+- Ideally, each section of a skill should contain a URL to the related part of the documentation
 - Never update a skill with `metadata.update-policy: never`, even when `--force` is passed.
 - When `metadata.update-source` is a URL, fetch it directly — do not search for it or substitute it.
 - When `metadata.update-source: web-search`, use official documentation only. Prefer the tool's own
