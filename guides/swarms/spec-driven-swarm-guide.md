@@ -1,8 +1,9 @@
 # Spec-Driven Swarm Development
+
 ## A Practical Guide for the Budget-Conscious AI Architect
 
-> **Role split**: You own the spec and interface contracts. Agents own execution. Claude orchestrates.  
-> **Budget constraint**: Foundation model APIs only. No local GPU cluster.  
+> **Role split**: You own the spec and interface contracts. Agents own execution. Claude orchestrates.
+> **Budget constraint**: Foundation model APIs only. No local GPU cluster.
 > **Target**: Repeatable, parallelized website (and beyond) factory.
 
 ---
@@ -27,7 +28,7 @@
 
 ## 1. Core Philosophy
 
-```
+```text
 Spec quality   →  the real bottleneck, not compute
 Interface contracts  →  generated FIRST, never invented by agents
 Subagents      →  one context window per module, isolated
@@ -36,8 +37,8 @@ Claude         →  lead orchestrator on Opus, workers on Sonnet
 Token cost     →  controlled by structure, not luck
 ```
 
-**The one rule that prevents all disasters:**  
-Agents consume interfaces. They never invent them.  
+**The one rule that prevents all disasters:**
+Agents consume interfaces. They never invent them.
 If an agent is deciding what an API endpoint looks like, the process is already broken.
 
 ---
@@ -45,7 +46,7 @@ If an agent is deciding what an API endpoint looks like, the process is already 
 ## 2. Toolchain
 
 | Tool | Purpose | Cost |
-|---|---|---|
+| --- | --- | --- |
 | `spec-kit` (GitHub) | Structured spec lifecycle: `/specify → /plan → /tasks → /implement` | Free |
 | Claude Code | Lead orchestrator + subagent spawner | API cost |
 | Docker Sandboxes | Isolation per agent, pre-baked images | Docker Desktop |
@@ -72,7 +73,7 @@ ccusage blocks --live
 
 ## 3. Project Structure
 
-```
+```text
 project-root/
 │
 ├── CLAUDE.md                        # ≤200 lines. INDEX ONLY. No content.
@@ -125,7 +126,9 @@ project-root/
 
 ### Why subdirectory CLAUDE.md files matter for cost
 
-Subdirectory CLAUDE.md files are loaded on-demand, not at startup. When the backend agent runs, only `backend/CLAUDE.md` loads. Frontend rules cost zero tokens for the backend session. At scale across multiple agents and projects, this compounds.
+Subdirectory CLAUDE.md files are loaded on-demand, not at startup. When the backend agent runs, only
+`backend/CLAUDE.md` loads. Frontend rules cost zero tokens for the backend session. At scale across
+multiple agents and projects, this compounds.
 
 ### Root CLAUDE.md template
 
@@ -139,7 +142,7 @@ Subdirectory CLAUDE.md files are loaded on-demand, not at startup. When the back
 
 ## Domain Boundaries
 - `/backend` → backend-agent owns it
-- `/frontend` → frontend-agent owns it  
+- `/frontend` → frontend-agent owns it
 - `/infra` → infra-agent owns it
 - `/docs/interface-contracts` → READ ONLY for all agents
 
@@ -225,7 +228,7 @@ Anything not in the spec is an agent's call. If you care about it, specify it.
 
 Generate contracts in one Claude Code session:
 
-```
+```text
 Generate interface contracts for @docs/spec.md.
 
 Produce the following files:
@@ -238,7 +241,7 @@ Do not generate implementation. Contracts only.
 Review each file and flag any ambiguity before proceeding.
 ```
 
-**You review the output. You correct anything architecturally wrong.**  
+**You review the output. You correct anything architecturally wrong.**
 This is your primary leverage point. 30 minutes here saves hours of merge conflicts.
 
 ---
@@ -248,7 +251,7 @@ This is your primary leverage point. 30 minutes here saves hours of merge confli
 ### The cost math
 
 | Model | Input $/1M | Output $/1M | Output multiplier |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Claude Opus 4 | $15 | $75 | 5× |
 | Claude Sonnet 4.6 | $3 | $15 | 5× |
 | Claude Haiku 4.5 | $0.80 | $4 | 5× |
@@ -257,7 +260,7 @@ Output tokens are always 5× input cost. Everything that reduces output volume, 
 
 ### The five levers, ranked by ROI
 
-**1. Plan mode by default — ~50% cost reduction**
+### 1. Plan mode by default — ~50% cost reduction
 
 ```bash
 # In Claude Code
@@ -266,10 +269,10 @@ Shift+Tab    # toggle plan mode
 !plan analyze the auth module and propose the testing strategy
 ```
 
-Use plan mode for: analysis, architecture decisions, reviews, debugging strategies.  
+Use plan mode for: analysis, architecture decisions, reviews, debugging strategies.
 Exit plan mode only when you need file modifications.
 
-**2. Opus plans, Sonnet executes — ~80% cost reduction on execution**
+### 2. Opus plans, Sonnet executes — ~80% cost reduction on execution
 
 ```bash
 # In ~/.bashrc or ~/.zshrc
@@ -281,13 +284,15 @@ opusplan    # architect-level reasoning on complex decisions
 ```
 
 Set subagent model explicitly:
+
 ```bash
 export CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-4-6
 ```
 
-**3. Skills over inline context — ~30% startup cost reduction**
+### 3. Skills over inline context — ~30% startup cost reduction
 
 Bad pattern (bloated CLAUDE.md):
+
 ```markdown
 ## Next.js Rules
 When using Next.js, always use the App Router. Route files should be named page.tsx.
@@ -296,6 +301,7 @@ Server components are default. Use 'use client' only when needed. Always use...
 ```
 
 Good pattern (lazy skill):
+
 ```markdown
 ## Skills Available
 - Next.js patterns: @.claude/skills/nextjs.md (load when working in /frontend)
@@ -303,7 +309,7 @@ Good pattern (lazy skill):
 
 The skill body only loads when triggered. 200 lines × N agents × M sessions = significant.
 
-**4. Disable unused MCP servers per task**
+### 4. Disable unused MCP servers per task
 
 Each enabled MCP server adds tool definitions to your system prompt.
 
@@ -315,7 +321,7 @@ Each enabled MCP server adds tool definitions to your system prompt.
 
 For a pure code-generation session: disable calendar, email, drive MCP servers.
 
-**5. Environment flag for background model calls**
+### 5. Environment flag for background model calls
 
 ```bash
 export DISABLE_NON_ESSENTIAL_MODEL_CALLS=1
@@ -332,7 +338,8 @@ ccusage blocks --live    # 5-hour billing block, live burn rate
 /cost       # running session total
 ```
 
-**Set a mental budget per project before starting.** Without it, you won't know when a runaway agent session is burning $40 in 20 minutes.
+**Set a mental budget per project before starting.** Without it, you won't know when a runaway agent
+session is burning $40 in 20 minutes.
 
 ---
 
@@ -374,7 +381,7 @@ tools: [read, write, bash, git]
 
 ```yaml
 ---
-name: frontend-agent  
+name: frontend-agent
 description: >
   Owns all frontend code: pages, components, routing, styling.
   Invoked AFTER design-agent has generated the design system.
@@ -437,14 +444,14 @@ Produce the following before finishing:
 
 ### The master orchestration prompt
 
-```
+```text
 You are the lead orchestrator for this project.
 
 Read: @docs/spec.md
 Read: @docs/interface-contracts/ (all files)
 Read: @CLAUDE.md
 
-Execute in phases. Use the Task tool to spawn subagents. Do not wait for one phase 
+Execute in phases. Use the Task tool to spawn subagents. Do not wait for one phase
 to complete before spawning all tasks in that phase simultaneously.
 
 ---
@@ -455,9 +462,9 @@ Task A — Backend:
   Agent: backend-agent
   Task: @docs/tasks/task-backend.md
   Workspace: /backend
-  
+
 Task B — Design System:
-  Agent: design-agent  
+  Agent: design-agent
   Task: @docs/tasks/task-design.md
   Workspace: /frontend/design-system
 
@@ -500,6 +507,7 @@ Do not invent solutions to blockers. Surface them.
 ### Per-agent task file format
 
 `docs/tasks/task-backend.md`:
+
 ```markdown
 # Backend Task
 
@@ -558,6 +566,7 @@ docker sandbox create claude ~/project/infra    --name proj-infra
 ### Execution patterns
 
 **Manual parallel (simple shell):**
+
 ```bash
 #!/bin/bash
 # Phase 1 — parallel
@@ -573,6 +582,7 @@ docker sandbox run proj-frontend -- "$(cat docs/tasks/task-frontend.md)"
 ```
 
 **Python DAG (when you need dependency ordering + retries):**
+
 ```python
 import subprocess
 import concurrent.futures
@@ -594,7 +604,7 @@ def run_sandbox(name, task_file):
 
 # Phase 1 — parallel
 with concurrent.futures.ThreadPoolExecutor() as ex:
-    futures = {ex.submit(run_sandbox, s, f): k 
+    futures = {ex.submit(run_sandbox, s, f): k
                for k, (s, f) in tasks.items()}
     results = {k: f.result() for f, k in futures.items()}
 
@@ -629,7 +639,8 @@ An agent that can `npm run test` and fix the failure is worth 10x an agent that 
 
 ## 10. Layer 6 — Context Survival (PreCompact)
 
-Compaction fires at ~83.5% context fill (hardcoded). Standard compaction loses session state. Your defense:
+Compaction fires at ~83.5% context fill (hardcoded). Standard compaction loses session state.
+Your defense:
 
 ### `.claude/hooks/precompact.md`
 
@@ -663,8 +674,9 @@ These files survive compaction. The next session reads them to resume.
 ### Mid-session preservation habit
 
 Any time you make a significant architectural call:
-```
-Document this decision in docs/decisions/adr-{today}.md so it survives 
+
+```text
+Document this decision in docs/decisions/adr-{today}.md so it survives
 context reset: [the decision and its rationale]
 ```
 
@@ -674,36 +686,43 @@ This is cheap insurance. Do it reflexively.
 
 ## 11. The Mitko Vasilev Approach — What's Feasible on a Budget
 
-Mitko's full stack requires a 4× A6000 GPU workstation running 20 concurrent local agents at zero marginal token cost. That's off the table. Here's what translates.
+Mitko's full stack requires a 4× A6000 GPU workstation running 20 concurrent local agents at zero
+marginal token cost. That's off the table. Here's what translates.
 
 ### What he's actually doing (the ideas, not the hardware)
 
-**GEPA: Skills as tunable parameters**
+### GEPA: Skills as tunable parameters
 
-The key insight: a SKILL.md file is a prompt that can be optimized. Instead of manually rewriting it when things go wrong, you run a feedback loop:
+The key insight: a SKILL.md file is a prompt that can be optimized. Instead of manually rewriting it
+when things go wrong, you run a feedback loop:
 
-```
+```text
 SKILL.md (v1) → agent executes task → pass/fail/logs → improved SKILL.md (v2) → repeat
 ```
 
-The optimization algorithm (GEPA, Genetic-Pareto) maintains a Pareto frontier of skill variants — one might be great at database tasks but mediocre at API design, another the inverse. A merge proposer then combines complementary strengths.
+The optimization algorithm (GEPA, Genetic-Pareto) maintains a Pareto frontier of skill variants — one
+might be great at database tasks but mediocre at API design, another the inverse. A merge proposer
+then combines complementary strengths.
 
 His published results:
-- Claude Haiku task pass rate: 79% → 98% on repository tasks  
+
+- Claude Haiku task pass rate: 79% → 98% on repository tasks
 - ARC-AGI agent: 32% → 89% accuracy after 50 iterations
 - Same model. No fine-tuning. Better instructions.
 
-**The local swarm concept**  
-20 concurrent agents, each with isolated context, coordinating through Git issues as the task queue. No chat UI — the issue tracker IS the orchestration surface.
+**The local swarm concept**
+20 concurrent agents, each with isolated context, coordinating through Git issues as the task queue.
+No chat UI — the issue tracker IS the orchestration surface.
 
-**Radicle as agent UI**  
-Distributed Git with issues. Agents consume issues as tasks, commit results, close issues. Human reviews the queue and approves merges.
+**Radicle as agent UI**
+Distributed Git with issues. Agents consume issues as tasks, commit results, close issues. Human
+reviews the queue and approves merges.
 
 ---
 
 ### What you can run on API budget
 
-**1. Manual GEPA-lite: skill evolution with DSPy**
+### 1. Manual GEPA-lite: skill evolution with DSPy
 
 You don't need local GPU for GEPA. DSPy calls the API.
 
@@ -735,16 +754,17 @@ optimized_skill = optimizer.compile(skill_v1)
 open(".claude/skills/nextjs-v2.md", "w").write(optimized_skill)
 ```
 
-**Cost control**: run GEPA on Haiku ($0.80/1M input). The skill improvements transfer to Sonnet and Opus sessions. Amortized cost per project drops as your skill library matures.
+**Cost control**: run GEPA on Haiku ($0.80/1M input). The skill improvements transfer to Sonnet and
+Opus sessions. Amortized cost per project drops as your skill library matures.
 
-**2. Git Issues as agent queue (GitHub, not Radicle)**
+### 2. Git Issues as agent queue (GitHub, not Radicle)
 
 ```markdown
 # Issue template: Agent Task
-**Agent**: backend-agent  
-**Phase**: 1  
-**Task file**: docs/tasks/task-backend.md  
-**Depends on**: none  
+**Agent**: backend-agent
+**Phase**: 1
+**Task file**: docs/tasks/task-backend.md
+**Depends on**: none
 **Status**: ready
 ```
 
@@ -757,13 +777,14 @@ gh issue list --label "agent-task" --label "phase-1" --json number,title,body \
 gh issue close 42 --comment "Completed in commit abc1234. Tests passing."
 ```
 
-Your human workflow: scan open issues → review closed ones with failing tests → reopen with clarification.
+Your human workflow: scan open issues → review closed ones with failing tests → reopen with
+clarification.
 
-**3. Skill specialization by project type**
+### 3. Skill specialization by project type
 
 Build a skill library that improves across projects, not just within one:
 
-```
+```text
 .claude/skills/
 ├── stacks/
 │   ├── nextjs-app-router.md        # refined over 5 projects
@@ -780,39 +801,43 @@ Build a skill library that improves across projects, not just within one:
         └── responsive-layout-task.md
 ```
 
-Every project refines the library. By project 10, your agents are measurably better than project 1 with no prompt engineering effort per-project.
+Every project refines the library. By project 10, your agents are measurably better than project 1
+with no prompt engineering effort per-project.
 
-**4. The evaluator is your real leverage**
+### 4. The evaluator is your real leverage
 
-Mitko's warning (and it's correct): GEPA optimizes against whatever you measure. Bad evaluator → agents pass tests while producing unmaintainable code.
+Mitko's warning (and it's correct): GEPA optimizes against whatever you measure. Bad evaluator →
+agents pass tests while producing unmaintainable code.
 
 Good evaluators for web projects:
+
 ```python
 def composite_evaluator(output_dir: str) -> float:
     scores = []
-    
+
     # Hard correctness (binary)
     scores.append(1.0 if run_tests(output_dir) else 0.0)
     scores.append(1.0 if build_succeeds(output_dir) else 0.0)
     scores.append(1.0 if api_contract_compliant(output_dir) else 0.0)
-    
+
     # Soft quality (gradients)
     scores.append(type_coverage(output_dir))        # 0.0–1.0
     scores.append(test_coverage(output_dir))         # 0.0–1.0
     scores.append(1.0 - dead_code_ratio(output_dir)) # 0.0–1.0
-    
+
     # YOU review skill diffs after >50 iterations
     # Reject cargo-cult accumulation
     return sum(scores) / len(scores)
 ```
 
-After ~50 GEPA iterations, review the skill diff manually. Skill files can accumulate contradictory rules that happen to work until the codebase changes.
+After ~50 GEPA iterations, review the skill diff manually. Skill files can accumulate contradictory
+rules that happen to work until the codebase changes.
 
 ---
 
 ### The Budget GEPA Cadence
 
-```
+```text
 Week 1–2:  Build first project manually. Note what agents got wrong.
 Week 3:    Define evaluator test tasks from real failures.
 Week 4:    Run GEPA on Haiku against your 5 worst-performing skills.
@@ -828,7 +853,7 @@ Month 2+:  Each new project runs with better skills.
 
 ### Checklist
 
-```
+```text
 SETUP (once per project type, then reuse)
 [ ] Stack decided and written into CLAUDE.md
 [ ] Agent definitions in .claude/agents/ (or reused from library)
@@ -862,7 +887,7 @@ EVALUATION (feeds GEPA loop)
 ### Token cost reduction by technique
 
 | Technique | Est. savings | Effort |
-|---|---|---|
+| --- | --- | --- |
 | Plan mode on analysis tasks | ~50% | Zero |
 | Sonnet for subagents (vs Opus) | ~80% execution cost | One env var |
 | Lazy skills (vs inline CLAUDE.md) | ~30% startup | Restructure once |
@@ -899,7 +924,7 @@ python gepa_optimize.py --skill .claude/skills/nextjs.md \
 ### Model selection guide
 
 | Task | Model | Reason |
-|---|---|---|
+| --- | --- | --- |
 | Architecture decisions, spec review | Opus | Best reasoning, worth the cost |
 | Code generation (subagents) | Sonnet | Good enough, 5× cheaper |
 | GEPA evaluation runs | Haiku | Cheap, fast, good at pass/fail |
@@ -918,5 +943,5 @@ These are yours. Do not delegate them.
 
 ---
 
-*Last updated: March 2026*  
+*Last updated: March 2026*
 *Stack: Claude Code native subagents + Docker Sandboxes + spec-kit + DSPy/GEPA + ccusage*

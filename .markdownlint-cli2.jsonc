@@ -1,0 +1,4 @@
+{
+  // CLAUDE.md is a Claude Code include directive file, not a markdown document.
+  "ignores": ["CLAUDE.md"]
+}
